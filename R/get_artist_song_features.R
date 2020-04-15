@@ -20,6 +20,14 @@ get_ids <- function(x){
 
 ids <- sapply(tracks, get_ids)
 
-auddio_features = t(as.data.frame(sapply(ids, get_track_audio_features)))
+audio_features = sapply(ids, get_track_audio_features)
 
-saveRDS(audio_features, file = 'data/audio_features.Rds')
+df_cols <- unique(unlist(sapply(audio_features, function(x) names(unlist(x))))) 
+
+audio_features_df <- audio_features %>% 
+  sapply(function(x) unlist(x)[df_cols]) %>% 
+  t %>% 
+  data.frame %>% 
+  type.convert(as.is = TRUE)
+
+saveRDS(audio_features_df, file = 'data/audio_features.Rds')
