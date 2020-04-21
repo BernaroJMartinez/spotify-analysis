@@ -1,0 +1,56 @@
+---
+title: "visualizations"
+author: "Lavonne Hoang"
+date: "4/20/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(GGally)
+library(scales)
+```
+
+```{r}
+coronavirus <- coronavirus[,colSums(is.na(coronavirus))<nrow(coronavirus)]
+coronavirus <- na.omit(coronavirus)
+coronavirus$Position <- as.factor(coronavirus$Position)
+```
+
+```{r}
+# scaled<-data.frame(coronavirus=scale(coronavirus[,c("danceability","energy","key","loudness","mode","speechiness",
+#                                                     "acousticness","instrumentalness","liveness",
+#                                                     "valence","tempo","cases","deaths")]))
+# fit <- polr(Position~danceability+energy+key+loudness+mode+speechiness+acousticness+instrumentalness+liveness+valence+tempo+cases+deaths, data=coronavirus,Hess = TRUE)
+# plot(fit)
+```
+
+
+
+```{r}
+averaged <- coronavirus %>% 
+    group_by(date) %>% 
+    summarise(a_danceability = mean(danceability), a_energy = mean(energy), a_key = mean(key), a_loudness = mean(loudness), a_mode = mean(mode), a_speechiness = mean(speechiness), a_acousticness = mean(acousticness), a_instrumentalness = mean(instrumentalness), a_liveness = mean(instrumentalness), a_valence = mean(valence), a_tempo = mean(tempo), a_cases = mean(cases), a_deaths = mean(deaths))
+```
+
+```{r}
+ggcorr(averaged)
+```
+
+```{r}
+averaged %>%
+  dplyr::select(date, a_danceability, a_energy, a_key, a_speechiness, a_instrumentalness, a_liveness, a_valence, a_tempo, a_cases) %>%
+  gather(key = "var", value = "value", -date, -a_cases) %>%
+  ggplot(aes(x = value, y = a_cases)) +
+    geom_point() +
+    facet_wrap(~ var, scales = "free") +
+    theme_bw()
+
+```
+
+```{r}
+averaged$a_cases <- rescale(averaged$a_cases)
+lm(a_cases~a_danceability+a_energy+a_instrumentalness+a_liveness+a_valence, data=averaged)
+```
+
