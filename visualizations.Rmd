@@ -35,7 +35,7 @@ coronavirus$Position <- as.factor(coronavirus$Position)
 ```{r}
 averaged <- coronavirus %>%
   group_by(date) %>%
-  summarise(a_danceability = mean(danceability), a_energy = mean(energy), a_key = mean(key), a_loudness = mean(loudness), a_mode = mean(mode), a_speechiness = mean(speechiness), a_acousticness = mean(acousticness), a_instrumentalness = mean(instrumentalness), a_liveness = mean(instrumentalness), a_valence = mean(valence), a_tempo = mean(tempo), a_cases = mean(cases), a_deaths = mean(deaths))
+  summarise(danceability = mean(danceability), energy = mean(energy), key = mean(key), loudness = mean(loudness), mode = mean(mode), speechiness = mean(speechiness), acousticness = mean(acousticness), instrumentalness = mean(instrumentalness), liveness = mean(instrumentalness), valence = mean(valence), tempo = mean(tempo), cases = mean(cases), deaths = mean(deaths))
 ```
 
 ```{r}
@@ -44,20 +44,27 @@ ggcorr(averaged)
 
 ```{r}
 averaged %>%
-  dplyr::select(date, a_danceability, a_energy, a_key, a_speechiness, a_instrumentalness, a_liveness, a_valence, a_tempo, a_cases) %>%
-  gather(key = "var", value = "value", -date, -a_cases) %>%
-  ggplot(aes(x = value, y = a_cases)) +
+  dplyr::select(date, danceability, energy, key, speechiness, instrumentalness, liveness, valence, tempo, cases) %>%
+  gather(key = "var", value = "value", -date, -cases) %>%
+  ggplot(aes(x = value, y = cases)) +
     geom_point() +
     facet_wrap(~ var, scales = "free") +
-    theme_bw()
+    theme_minimal() + 
+  labs(title = "Number of Average Cases Across Different Values of Audio Features",
+       x = "Values",
+       y = "Average Cases Per Day")
 
 ```
 
 ```{r}
-averaged$a_cases <- rescale(averaged$a_cases)
-fit<- lm(a_cases~a_danceability+a_energy+a_instrumentalness+a_key+a_liveness+a_speechiness+a_tempo+a_valence, data=averaged)
+averaged$log_cases <- log(averaged$cases)
+fit<- lm(log_cases~danceability+energy+instrumentalness+key+liveness+speechiness+tempo+valence, data=averaged)
 step <- stepAIC(fit, direction="both")
 step$anova # display results
 summary(step)
 ```
 
+```{r}
+library(ggeffects)
+ggPredict(step,colorAsFactor = TRUE,interactive=TRUE)
+```
